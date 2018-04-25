@@ -21,17 +21,13 @@ public class main {
     {
 
         connectDB();
+        DBManager.setInitialParameters(mongo, credential, database);
 
+        DBManager db_manager = new DBManager();
+        get("/add/:name", (request, response) -> {
 
-        get("/hello/:name", (request, response) -> {
-
-            // Table used in search.
-            MongoCollection<Document> collection;
-
-            collection = database.getCollection("dns");
-
-            collection.updateOne(Filters.eq("domain_name",  "twitter.com"),
-                    Updates.set("domain_name", request.params(":name") ));
+            String[] strings = new String[]{"192.16","195.16"};
+            db_manager.addRow("facebook.com","usa", strings);
             return "Hello: " + request.params(":name");
 
         });
