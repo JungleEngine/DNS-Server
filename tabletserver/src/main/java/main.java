@@ -31,7 +31,7 @@ public class main {
 
     public static void main (String[] argv)
     {
-/*
+
 
         try {
             Socket socket = new Socket("192.168.1.10", 4040);
@@ -59,7 +59,7 @@ public class main {
             e.printStackTrace();
         }
 
-        */
+
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
 
@@ -77,7 +77,6 @@ public class main {
         });
 
         post("/client/addrow", (request, response) -> {
-            System.out.println("user");
             JSONParser json_parser = new JSONParser();
             JSONObject jsonObject = (JSONObject) json_parser.parse(request.body());
             String domain_name = (String) jsonObject.get("domain_name");
@@ -90,8 +89,10 @@ public class main {
             }
 
             db_manager.addRow(domain_name, country, IPs);
+            System.out.println("user");
+            response.body("abosamra");
+            return response.body();
 
-            return IPs;
         });
 
 
