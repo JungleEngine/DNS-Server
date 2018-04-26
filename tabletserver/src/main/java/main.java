@@ -10,10 +10,19 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.internal.connection.ConcurrentLinkedDeque;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.ArrayList;
 import java.util.List;
 
 import static spark.Spark.get;
+import static spark.Spark.post;
 
 public class main {
     static MongoClient mongo;
@@ -22,17 +31,67 @@ public class main {
 
     public static void main (String[] argv)
     {
+/*
 
+        try {
+            Socket socket = new Socket("192.168.1.10", 4040);
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
+
+            // Consume the initial welcoming messages from the server
+            System.out.println(in.readLine());
+
+            BufferedReader consolereader = new BufferedReader (new InputStreamReader(System.in));
+            String message = "";
+            while(true)
+            {
+                System.out.println("Enter a message in lower case or a period '.' to quit");
+                message = consolereader.readLine();
+                out.println(message); //send message to server
+                if(message.equals("."))
+                    break;
+                String response = in.readLine();
+                System.out.println("Capitalized message = "+ response + "\n");
+            }
+            socket.close();
+        }catch (Exception e)
+        {
+            e.printStackTrace();
+        }
+
+        */
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
 
         DBManager db_manager = new DBManager();
-        get("/add/:name", (request, response) -> {
+
+
+        get("/client/addrow/:domain_name/:country/:", (request, response) -> {
+
 
             String[] strings = new String[]{"192.16","4454.3"};
             List<Document> docs =  db_manager.readRows("facebook.com");
-            return "Hello: " + request.params(":name") + "\n" + docs.toString();
+            return request.queryParams("name");
+            //return "Hello: " + request.params(":name") + "\n" + docs.toString();
 
+        });
+
+        post("/client/addrow", (request, response) -> {
+            System.out.println("user");
+            JSONParser json_parser = new JSONParser();
+            JSONObject jsonObject = (JSONObject) json_parser.parse(request.body());
+            String domain_name = (String) jsonObject.get("domain_name");
+            String country = (String) jsonObject.get("country");
+            JSONArray IPs_object= (JSONArray) jsonObject.get("IPs");
+            List<String> IPs = new ArrayList<String>();
+
+            for (int i=0; i<IPs_object.size(); i++) {
+                IPs.add((String) IPs_object.get(i));
+            }
+
+            db_manager.addRow(domain_name, country, IPs);
+
+            return IPs;
         });
 
 

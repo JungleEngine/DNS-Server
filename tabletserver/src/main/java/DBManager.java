@@ -22,14 +22,12 @@ public class DBManager {
 
         collection = database.getCollection("dns");
 
-
     }
 
 
 
     public void set(String domain_name, String country_name, String IP)
     {
-
 
         Bson filter = Filters.and(
 
@@ -93,7 +91,7 @@ public class DBManager {
     }
 
     // Add single domain,country with multiple IP.
-    public int addRow(String domain_name, String country_name, String[] IP)
+    public int addRow(String domain_name, String country_name, List<String> IP)
     {
 
         Document result = collection.find(Filters.eq("domain_name", domain_name)).first();
@@ -103,7 +101,7 @@ public class DBManager {
 
         Document document = new Document("domain_name", domain_name)
                 .append("countries", Arrays.asList(new Document("country", country_name)
-                        .append("IPs", Arrays.asList(IP))));
+                        .append("IPs", IP)));
 
         collection.insertOne(document);
 
