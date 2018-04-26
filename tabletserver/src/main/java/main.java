@@ -10,6 +10,9 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.internal.connection.ConcurrentLinkedDeque;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+
+import java.util.List;
+
 import static spark.Spark.get;
 
 public class main {
@@ -26,11 +29,13 @@ public class main {
         DBManager db_manager = new DBManager();
         get("/add/:name", (request, response) -> {
 
-            String[] strings = new String[]{"192.16","195.16"};
-            db_manager.addRow("facebook.com","usa", strings);
-            return "Hello: " + request.params(":name");
+            String[] strings = new String[]{"192.16","4454.3"};
+            List<Document> docs =  db_manager.readRows("facebook.com");
+            return "Hello: " + request.params(":name") + "\n" + docs.toString();
 
         });
+
+
 
         System.out.println("abo samra");
     }
