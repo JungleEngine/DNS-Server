@@ -11,6 +11,18 @@ div{
 	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
 	crossorigin="anonymous">
 </script>
+<script>
+var BASE_URL = "http://localhost:4567/";
+// Post requests.
+function sendRequest(data, endpoint){
+	$.post(BASE_URL+endpoint,JSON.stringify(data),function(response){
+
+		console.log("Response, ",  response);
+		
+	} 
+	);
+}
+</script>
 </head>
 <body>
 <div class = "add">
@@ -160,7 +172,7 @@ $(".delete_row").click(function(){
 	var object = {
 		domain : domain,
 	}
-
+	sendRequest(object, "/client/deleterow");
 	console.log(JSON.stringify(object));
 
 })

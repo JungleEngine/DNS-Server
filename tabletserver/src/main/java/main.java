@@ -13,6 +13,7 @@ import org.bson.conversions.Bson;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import spark.Filter;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -21,8 +22,10 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 
+import static spark.Spark.after;
 import static spark.Spark.get;
 import static spark.Spark.post;
+import static spark.route.HttpMethod.after;
 
 public class main {
     static MongoClient mongo;
@@ -65,9 +68,14 @@ public class main {
 
         DBManager db_manager = new DBManager();
 
+        after((Filter) (request, response) -> {
+            response.header("Access-Control-Allow-Origin", "*");
+            response.header("Access-Control-Allow-Methods", "GET");
+        });
+
         // Delete entire row.
         post("/client/deleterow", (request, response) -> {
-
+            System.out.println(request.body());
             JSONParser json_parser = new JSONParser();
             JSONObject object = (JSONObject) json_parser.parse(request.body());
             String domain = (String) object.get("domain");
@@ -75,6 +83,7 @@ public class main {
             return response.body();
 
         });
+
 
         post("/client/readrow", (request, response) -> {
 
