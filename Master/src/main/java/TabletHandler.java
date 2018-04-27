@@ -14,13 +14,16 @@ import org.bson.json.JsonWriterSettings;
 
 import javax.print.Doc;
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
+import static java.lang.Thread.sleep;
 
 public class TabletHandler implements Runnable{
     Socket socket;
@@ -31,7 +34,7 @@ public class TabletHandler implements Runnable{
     static MongoDatabase database;
     static MongoCollection<Document> collection;
     static String LastElement="";//last element in the last tablet to get domain names after it
-
+    static String SparkPort="5678"; //port for sending to tablet servers their ranges
     public TabletHandler(Socket _socket,MongoClient _mongo,MongoCredential _credential,MongoDatabase _database){
 
         mongo=_mongo;
@@ -77,10 +80,23 @@ static {
         }
         System.out.println(first+" "+last);
         out.println(JSON.serialize(list));
+        String parameters="{first_domain:"+'"'+first+'"'+
+                "last_domain:"+'"'+last+"\"}";
+
+
+        String url="http://localhost:"+SparkPort+"/3bhady";
+//        String url="http://"+new String(socket.getInetAddress().getHostAddress())+":"+SparkPort+"/master/setrange";
+        try {
+            sleep(5);
+        }catch(Exception e){
+
+        }
+        System.out.println(url);
+        SendPost(url,parameters);
         System.out.println("Data sent");
 
         //TODO: send range for the tablet server on it's endpoint
-        
+
 
 
         //TODO: wait for updates
@@ -97,6 +113,47 @@ static {
         catch(IOException ioException){
             ioException.printStackTrace();
         }
+    }
+
+    private static void SendPost(String url,String param) {
+        try {
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("GET");
+            con.setRequestProperty("content-type", "text/html;charset=utf-8");
+
+            con.setDoOutput(true);
+           // OutputStream os = con.getOutputStream();
+           // os.write(param.getBytes());
+           // os.flush();
+           // os.close();
+            //DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            //wr.writeBytes(param);
+            //wr.flush();
+            //wr.close();
+            int responseCode = con.getResponseCode();
+            System.out.println("POST Response Code :: " + responseCode);
+
+//            if (responseCode == HttpURLConnection.HTTP_OK) { //success
+//                BufferedReader in = new BufferedReader(new InputStreamReader(
+//                        con.getInputStream()));
+//                String inputLine;
+//                StringBuffer response = new StringBuffer();
+//
+//                while ((inputLine = in.readLine()) != null) {
+//                    response.append(inputLine);
+//                }
+//                in.close();
+//
+//                // print result
+//                System.out.println(response.toString());
+//            } else {
+//                System.out.println("POST request not worked");
+//            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
     private static void connectDB() {
         try {
