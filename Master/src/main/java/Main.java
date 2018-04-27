@@ -4,16 +4,19 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOneModel;
+import com.mongodb.client.model.Updates;
 import org.bson.Document;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Map;
-import java.util.TreeMap;
+import java.io.*;
+import java.net.ServerSocket;
+import java.net.Socket;
+import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
+import static spark.Spark.get;
 
 public class Main {
     static MongoClient mongo;
@@ -24,8 +27,29 @@ public class Main {
     public static void main(String[] argv) {
 
         connectDB();
+        get("/connect/:domain", (request, response) -> {
 
 
+            return "Hello: " + request.params(":name");
+
+        });
+            ServerSocket socket;
+            // Thread pool
+            ExecutorService TabletHandlingPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+
+        try {
+
+                socket = new ServerSocket(4040);
+                while (true) {
+                    System.out.println("Waiting for connection from a tablet server");
+                    Socket connection = socket.accept();
+                    System.out.println("Connection received from " + connection.getInetAddress().getHostName());
+                    TabletHandlingPool.execute(new TabletHandler(connection,mongo,credential,database));
+                }
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+        TabletHandlingPool.shutdown();
 
 
 
@@ -43,7 +67,9 @@ public class Main {
 //            return "Hello: " + request.params(":name");
 //
 //        });
+
     }
+
     private static void FillDatabase(){
 
         String fileName = "data.txt";
@@ -55,9 +81,19 @@ public class Main {
             // Always wrap FileReader in BufferedReader.
             BufferedReader bufferedReader = new BufferedReader(fileReader);
 
+            class MyDomainComp implements Comparator<String> {
+
+                @Override
+                public int compare(String s1, String s2) {
+
+                    String temp1 = s1.replace("\\.","");
+                    String temp2 = s2.replace("\\.","");
+                    return temp1.compareToIgnoreCase(temp2);
+                }
+            }
             String line;
             ArrayList<UpdateOneModel<Document>> documents = new ArrayList<UpdateOneModel<Document>>();
-            Map<String, TreeMap<String, ArrayList<String>>> mp = new TreeMap<>();
+            Map<String, TreeMap<String, ArrayList<String>>> mp = new TreeMap<String, TreeMap<String, ArrayList<String>>>(new MyDomainComp());
 
             while ((line = bufferedReader.readLine()) != null) {
                 String[] parts = line.split(" ");
@@ -107,10 +143,12 @@ public class Main {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
     }
+
     private static void connectDB() {
         try {
-            collection = database.getCollection("dns");
+
             MongoClientOptions.Builder clientOptions = new MongoClientOptions.Builder();
             clientOptions.connectionsPerHost(120);
 
@@ -118,7 +156,7 @@ public class Main {
             //mongo = new MongoClient("localhost:27017?replicaSet=rs0&maxPoolSize=200", 27017);
             credential = MongoCredential.createCredential("", "mp2", "".toCharArray());
             database = mongo.getDatabase("mp2");
-
+            collection = database.getCollection("dns");
         } catch (Exception e) {
 
             System.out.println("error connecting to database " + e.getMessage());
