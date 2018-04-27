@@ -77,9 +77,12 @@ static {
         }
         System.out.println(first+" "+last);
         out.println(JSON.serialize(list));
-
-
         System.out.println("Data sent");
+
+        //TODO: send range for the tablet server on it's endpoint
+        
+
+
         //TODO: wait for updates
         //Updates will be rows that i delete and reinsert
     }
