@@ -1,5 +1,4 @@
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
+ import org.json.simple.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -20,7 +19,7 @@ public class main {
 
             try {
 
-                URL url = new URL("http://"+ request_IP + "/client/addrow");
+                URL url = new URL("http://" + request_IP + "/client/addrow");
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("POST");
 

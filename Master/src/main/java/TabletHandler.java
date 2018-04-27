@@ -30,6 +30,7 @@ public class TabletHandler implements Runnable{
     static MongoCredential credential;
     static MongoDatabase database;
     static MongoCollection<Document> collection;
+    static String LastElement="";//last element in the last tablet to get domain names after it
 
     public TabletHandler(Socket _socket,MongoClient _mongo,MongoCredential _credential,MongoDatabase _database){
 
@@ -61,7 +62,9 @@ static {
         //send half of data
         //TODO: send half of the words
         //TODO: send the other tablets other elements
-        FindIterable<Document> list = collection.find().limit(count/2);
+        Bson filter = Filters.gt("domain_name", LastElement);
+        FindIterable<Document> list = collection.find(filter).limit(count/2);
+
 
         String first=null;
         String last=null;
@@ -70,20 +73,13 @@ static {
             if(first==null)
             first = (String)doc.get("domain_name");
             else
-            last = (String)doc.get("domain_name");
+            LastElement = last = (String)doc.get("domain_name");
         }
         System.out.println(first+" "+last);
-        String serialize = JSON.serialize(list);
+        out.println(JSON.serialize(list));
 
-        //in.read(str);
-        //for(Document doc : list)
-        {
-        //    out.write(doc.toJson());
-        }
-        System.out.println(serialize);
-        out.println(serialize);
-        System.out.println("5alast ba3t");
 
+        System.out.println("Data sent");
         //TODO: wait for updates
         //Updates will be rows that i delete and reinsert
     }
