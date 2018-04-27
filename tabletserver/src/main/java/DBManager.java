@@ -3,6 +3,7 @@ import com.mongodb.MongoCredential;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
 import org.bson.Document;
 import org.bson.conversions.Bson;
@@ -25,8 +26,7 @@ public class DBManager {
     }
 
 
-
-    public void set(String domain_name, String country_name, String IP)
+    public void set(String domain_name, String country_name, List<String> IPs)
     {
 
         Bson filter = Filters.and(
@@ -36,7 +36,7 @@ public class DBManager {
 
                                 );
 
-        Bson add = Updates.addToSet("countries.$.IPs",IP);
+        Bson add = Updates.addEachToSet("countries.$.IPs",IPs);
 
         // Add the new IP.
         collection.updateOne(filter, add);
@@ -94,16 +94,24 @@ public class DBManager {
     public int addRow(String domain_name, String country_name, List<String> IP)
     {
 
-        Document result = collection.find(Filters.eq("domain_name", domain_name)).first();
 
-        if (result != null)
-            return -1;
 
-        Document document = new Document("domain_name", domain_name)
-                .append("countries", Arrays.asList(new Document("country", country_name)
-                        .append("IPs", IP)));
+//        Document result = collection.find(Filters.eq("domain_name", domain_name)).first();
+//
+//        if (result != null)
+//            return -1;
 
-        collection.insertOne(document);
+//        Document document = new Document("domain_name", domain_name)
+//                .append("countries", Arrays.asList(new Document("country", country_name)
+//                        .append("IPs", IP)));
+
+        // Add country with IPs and if domain doesn't exist create new  document.
+        collection.updateOne(Filters.eq("domain_name", domain_name),
+                Updates.addToSet("countries",new Document("country", country_name)
+                        .append("IPs", IP)),
+                new UpdateOptions().upsert(true));
+
+        //collection.insertOne(document);
 
         return 1;
 

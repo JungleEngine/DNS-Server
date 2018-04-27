@@ -65,17 +65,77 @@ public class main {
 
         DBManager db_manager = new DBManager();
 
+        // Delete entire row.
+        post("/client/deleterow", (request, response) -> {
 
-        get("/client/addrow/:domain_name/:country/:", (request, response) -> {
-
-
-            String[] strings = new String[]{"192.16","4454.3"};
-            List<Document> docs =  db_manager.readRows("facebook.com");
-            return request.queryParams("name");
-            //return "Hello: " + request.params(":name") + "\n" + docs.toString();
+            JSONParser json_parser = new JSONParser();
+            JSONObject object = (JSONObject) json_parser.parse(request.body());
+            String domain = (String) object.get("domain");
+            db_manager.deleteRow(domain);
+            return response.body();
 
         });
 
+        post("/client/readrow", (request, response) -> {
+
+            JSONParser json_parser = new JSONParser();
+            JSONObject object = (JSONObject) json_parser.parse(request.body());
+            String domain = (String) object.get("domain");
+            List<Document> rows = db_manager.readRows(domain);
+            return response.body();
+
+        });
+
+        // Add row with n columns and n IPs
+        post("/client/set", (request, response) -> {
+
+            // Parser for request.body() to convert it t json.
+            JSONParser json_parser = new JSONParser();
+
+            // Get array of json objects.
+            JSONArray jsonArray = (JSONArray)json_parser.parse(request.body());
+
+            // Walk through all objects in array.
+            for (int i = 0; i < jsonArray.size(); i++)
+            {
+                JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+
+                String domain_name = (String) jsonObject.get("domain");
+                String country = (String) jsonObject.get("country");
+                JSONArray IPs_object= (JSONArray) jsonObject.get("IPs");
+                List<String> IPs = new ArrayList<String>();
+
+                for (int j = 0; j<IPs_object.size(); j++)
+                {
+
+                    IPs.add((String) IPs_object.get(j));
+
+                }
+
+
+                db_manager.set(domain_name, country, IPs);
+                System.out.println("set_row");
+            }
+
+            response.body("abosamra");
+            return response.body();
+
+        });
+
+        // Delete cells of certain domain and country.
+        post("/client/deletecells", (request, response) -> {
+
+            // Parser for request.body() to convert it t json.
+            JSONParser json_parser = new JSONParser();
+            JSONObject object = (JSONObject) json_parser.parse(request.body());
+            String domain = (String) object.get("domain");
+            String country = (String) object.get("country");
+            db_manager.deleteCells(domain, country);
+            return response.body();
+
+        });
+
+        // Add entire row with n columns and m columns data.
         post("/client/addrow", (request, response) -> {
 
             // Parser for request.body() to convert it t json.
@@ -110,7 +170,6 @@ public class main {
             return response.body();
 
         });
-
 
 
         System.out.println("abo samra");
