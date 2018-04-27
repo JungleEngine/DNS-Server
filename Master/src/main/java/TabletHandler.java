@@ -42,12 +42,11 @@ public class TabletHandler implements Runnable{
 
              out = new PrintWriter(socket.getOutputStream(), true);
             System.out.println("here here");
-             in = new BufferedReader( new InputStreamReader(socket.getInputStream())); //what does this
+             in = new BufferedReader( new InputStreamReader(socket.getInputStream()));
             System.out.println("here here");
             //TODO:
         }catch(Exception e)
         {
-            System.out.println("errorrrr");
             System.out.println(e.getMessage());
         }
     }
@@ -55,12 +54,25 @@ static {
     //FindIterable<Document> list = collection.find();
 }
     public void run() {
-        System.out.println("here");
-        int count =(int)collection.count();
-        System.out.println("hello");
-        //Bson filter = Filters.gt("domain_name","")
-        FindIterable<Document> list = collection.find().limit(5);
 
+        int count =(int)collection.count();
+
+        //Bson filter = Filters.gt("domain_name","")
+        //send half of data
+        //TODO: send half of the words
+        //TODO: send the other tablets other elements
+        FindIterable<Document> list = collection.find().limit(count/2);
+
+        String first=null;
+        String last=null;
+        for(Document doc : list)
+        {
+            if(first==null)
+            first = (String)doc.get("domain_name");
+            else
+            last = (String)doc.get("domain_name");
+        }
+        System.out.println(first+" "+last);
         String serialize = JSON.serialize(list);
 
         //in.read(str);
@@ -71,11 +83,9 @@ static {
         System.out.println(serialize);
         out.println(serialize);
         System.out.println("5alast ba3t");
-        //try {
-        //    String str = in.readLine(); // The server reads a message from the client
-       // }catch(Exception e){
 
-        //}
+        //TODO: wait for updates
+        //Updates will be rows that i delete and reinsert
     }
 
     private static void sendMessage(String msg,ObjectOutputStream out)
@@ -93,7 +103,6 @@ static {
         try {
             collection = database.getCollection("dns");
         } catch (Exception e) {
-
             System.out.println("error connecting to database " + e.getMessage());
         }
     }
