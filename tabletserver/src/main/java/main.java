@@ -2,15 +2,9 @@ import com.mongodb.MongoClient;
 import com.mongodb.MongoClientOptions;
 import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Filters;
-import com.mongodb.client.model.Updates;
-import com.mongodb.internal.connection.ConcurrentLinkedDeque;
-import com.mongodb.util.JSON;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -18,12 +12,13 @@ import org.json.simple.parser.JSONParser;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
-import static spark.Spark.get;
 import static spark.Spark.port;
 import static spark.Spark.post;
 
@@ -32,6 +27,9 @@ public class main {
     static MongoCredential credential;
     static MongoDatabase database;
     static MongoCollection<Document> collection;
+    static Set<String> deleted_domains = new HashSet<String>();
+    static String first_domain = "";
+    static String last_domain = "";
 
     public static void main (String[] argv)
     {
@@ -40,7 +38,6 @@ public class main {
 
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
-
         DBManager db_manager = new DBManager();
 
         // Connect with the master server.
@@ -56,21 +53,29 @@ public class main {
 
             db_manager.fillInitialData(initialData);
 
-            //s.close();  //close the server socket
+            TimeUnit.SECONDS.sleep(30);
+
+            out.println(deleted_domains);
+            out.println(db_manager.getUpdatedDocuments());
 
         }catch(Exception e){
           e.printStackTrace();
         }
 
-//        get("/client/addrow/:domain_name/:country/:", (request, response) -> {
-//
-//
-//            String[] strings = new String[]{"192.16","4454.3"};
-//            List<Document> docs =  db_manager.readRows("facebook.com");
-//            return request.queryParams("name");
-//            //return "Hello: " + request.params(":name") + "\n" + docs.toString();
-//
-//        });
+        // Add entire row with n columns and m columns data.
+        post("/master/setrange", (request, response) -> {
+
+            System.out.println("Set range");
+
+            JSONParser JP = new JSONParser();
+            JSONObject JO = (JSONObject)JP.parse(request.body());
+
+            String first_domain = (String)JO.get("first_domain");
+            String last_domain = (String)JO.get("last_domain");
+
+            response.body("Received range!");
+            return response.body();
+        });
 
         // Add entire row with n columns and m columns data.
         post("/client/addrow", (request, response) -> {
@@ -83,24 +88,36 @@ public class main {
             // Get array of JSON objects.
             JSONArray JA = (JSONArray)JP.parse(request.body());
 
+            String domain_name = "";
+
             // Walk through all objects in array.
             for (int i = 0; i < JA.size(); i++)
             {
                 JSONObject JO = (JSONObject)JA.get(i);
 
-                String domain_name = (String)JO.get("domain_name");
+                domain_name = (String)JO.get("domain_name");
+
+                if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+                {
+                    response.status(400);
+                    response.body("Redirected to master");
+                    return response.body();
+                }
+
                 String country = (String)JO.get("country");
                 JSONArray IPs_object= (JSONArray)JO.get("IPs");
 
                 List<String> IPs = new ArrayList<String>();
 
-                for (int j = 0; j<IPs_object.size(); j++)
+                for (int j = 0; j < IPs_object.size(); j++)
                 {
                     IPs.add((String) IPs_object.get(j));
                 }
 
                 db_manager.addRow(domain_name, country, IPs);
             }
+
+            deleted_domains.remove(domain_name);
 
             response.body("Added row successfully");
             return response.body();
@@ -116,6 +133,13 @@ public class main {
             JSONObject JO = (JSONObject)JP.parse(request.body());
 
             String domain_name = (String)JO.get("domain_name");
+
+            if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+            {
+                response.status(400);
+                response.body("Redirected to master");
+                return response.body();
+            }
 
             List<Document> docs = db_manager.readRow(domain_name);
 
@@ -137,7 +161,16 @@ public class main {
 
             String domain_name = (String)JO.get("domain_name");
 
+            if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+            {
+                response.status(400);
+                response.body("Redirected to master");
+                return response.body();
+            }
+
             db_manager.deleteRow(domain_name);
+
+            deleted_domains.add(domain_name);
 
             response.body("Deleted successfully!");
             return response.body();
@@ -153,10 +186,18 @@ public class main {
             JSONParser JP = new JSONParser();
             JSONObject JO = (JSONObject)JP.parse(request.body());
 
-            String domain = (String)JO.get("domain_name");
+            String domain_name = (String)JO.get("domain_name");
+
+            if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+            {
+                response.status(400);
+                response.body("Redirected to master");
+                return response.body();
+            }
+
             String country = (String)JO.get("country");
 
-            db_manager.deleteCells(domain, country);
+            db_manager.deleteCells(domain_name, country);
 
             response.body("Deleted successfully!");
             return response.body();
@@ -181,6 +222,14 @@ public class main {
                 JSONObject JO = (JSONObject)JA.get(i);
 
                 String domain_name = (String)JO.get("domain_name");
+
+                if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+                {
+                    response.status(400);
+                    response.body("Redirected to master");
+                    return response.body();
+                }
+
                 String country = (String)JO.get("country");
                 JSONArray IPs_object= (JSONArray)JO.get("IPs");
 
@@ -188,11 +237,8 @@ public class main {
 
                 for (int j = 0; j<IPs_object.size(); j++)
                 {
-
                     IPs.add((String) IPs_object.get(j));
-
                 }
-
                 db_manager.set(domain_name, country, IPs);
             }
 
