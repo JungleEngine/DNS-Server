@@ -71,7 +71,6 @@ public class main {
           e.printStackTrace();
         }
 
-        // Add entire row with n columns and m columns data.
         post("/master/setrange", (request, response) -> {
 
             System.out.println("Set range");
