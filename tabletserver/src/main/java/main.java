@@ -8,6 +8,7 @@ import org.bson.Document;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
+import spark.Filter;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static spark.Spark.after;
 import static spark.Spark.port;
 import static spark.Spark.post;
 
@@ -39,6 +41,13 @@ public class main {
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
         DBManager db_manager = new DBManager();
+
+        after((Filter) (request, response) -> {
+            response.header("Access-Control-Allow-Origin", "*");
+            response.header("Access-Control-Allow-Methods", "GET");
+        });
+
+ 
 
         // Connect with the master server.
         try{

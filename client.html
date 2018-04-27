@@ -11,6 +11,18 @@ div{
 	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
 	crossorigin="anonymous">
 </script>
+<script>
+var BASE_URL = "http://localhost:4567/";
+// Post requests.
+function sendRequest(data, endpoint){
+	$.post(BASE_URL+endpoint,JSON.stringify(data),function(response){
+
+		console.log("Response, ",  response);
+
+	} 
+	);
+}
+</script>
 </head>
 <body>
 <div class = "add">
@@ -134,6 +146,9 @@ $(".set_row").click(function(){
 		// domain_name = $add_row_container.eq(i).children().first().children(".country").val();
 		// domain_name = $add_row_container.eq(i).children().first().children(".country").val();
 	}
+
+	sendRequest(rows_object, "/client/set");
+
 	console.log(JSON.stringify(rows_object));
 	console.log("set_row");
 
@@ -148,6 +163,8 @@ $(".read_row").click(function(){
 		domain : domain,
 	}
 
+	sendRequest(object, "/client/readrow");
+
 	console.log(JSON.stringify(object));
 
 })
@@ -160,7 +177,7 @@ $(".delete_row").click(function(){
 	var object = {
 		domain : domain,
 	}
-
+	sendRequest(object, "/client/deleterow");
 	console.log(JSON.stringify(object));
 
 })
@@ -175,6 +192,7 @@ $(".delete_cells").click(function(){
 		domain : domain,
 		country : country
 	}
+	sendRequest(object, "/client/deletecells");
 
 	console.log(JSON.stringify(object));
 
@@ -213,6 +231,9 @@ $(".add_row").click(function(){
 		// domain_name = $add_row_container.eq(i).children().first().children(".country").val();
 		// domain_name = $add_row_container.eq(i).children().first().children(".country").val();
 	}
+
+	sendRequest(rows_object, "/client/addrow");
+
 	console.log(JSON.stringify(rows_object));
 
 })
