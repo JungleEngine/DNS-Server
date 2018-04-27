@@ -1,10 +1,12 @@
 import com.mongodb.MongoClient;
 import com.mongodb.MongoCredential;
+import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.UpdateOptions;
 import com.mongodb.client.model.Updates;
+import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.json.simple.JSONArray;
@@ -44,6 +46,8 @@ public class DBManager {
         // Add the new IP.
         collection.updateOne(filter, add);
 
+        collection.updateOne(filter,Updates.set("dirty_bit","1"));
+
     }
 
     public void deleteCells(String domain_name, String country_name) {
@@ -59,6 +63,8 @@ public class DBManager {
 
         // Delete that IP.
         collection.updateOne(filter, delete);
+
+        collection.updateOne(filter,Updates.set("dirty_bit","1"));
 
         /* collection.updateOne(Filters.eq("dns", country_name),
                     Updates.addToSet("documents",temp_doc),
@@ -81,6 +87,8 @@ public class DBManager {
         // Delete that IP.
         collection.updateOne(filter, delete);
 
+        collection.updateOne(filter,Updates.set("dirty_bit","1"));
+
     }
 
     public void deleteRow(String domain_name) {
@@ -102,12 +110,16 @@ public class DBManager {
 //        Document document = new Document("domain_name", domain_name)
 //                .append("countries", Arrays.asList(new Document("country", country_name)
 //                        .append("IPs", IP)));
+        Bson updates = Updates.addToSet("countries", new Document("country", country_name)
+                .append("IPs", IP));
+        Bson updates2 = Updates.set("dirty_bit","1");
+        Bson updates3 = Updates.combine(updates,updates2);
 
         // Add country with IPs and if domain doesn't exist create new  document.
-        collection.updateOne(Filters.eq("domain_name", domain_name),
-                Updates.addToSet("countries", new Document("country", country_name)
-                        .append("IPs", IP)),
+        collection.updateOne(Filters.eq("domain_name", domain_name),updates3,
                 new UpdateOptions().upsert(true));
+
+
 
         //collection.insertOne(document);
 
@@ -142,12 +154,7 @@ public class DBManager {
             for (int i = 0 ; i < JA.size(); ++i)
             {
                 JSONObject JO = (JSONObject)JA.get(i);
-                try {
-                    collection.insertOne(Document.parse(JO.toString()));
-                } catch(Exception e)
-                {
-                    System.out.println("Document already exists!");
-                }
+                collection.insertOne(Document.parse(JO.toString()));
             }
 
             if (initialData != null)
@@ -158,5 +165,14 @@ public class DBManager {
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    public String getUpdatedDocuments() {
+
+        FindIterable<Document> docs = collection.find(Filters.eq("dirty_bit", "1"));
+
+        String serialize = JSON.serialize(docs);
+
+        return serialize;
     }
 }
