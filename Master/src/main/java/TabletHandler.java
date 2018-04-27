@@ -59,7 +59,7 @@ static {
         int count =(int)collection.count();
 
         //Bson filter = Filters.gt("domain_name","")
-        FindIterable<Document> list = collection.find().limit(100);
+        FindIterable<Document> list = collection.find().limit(2);
 
         String serialize = JSON.serialize(list);
 
