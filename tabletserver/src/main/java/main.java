@@ -32,7 +32,7 @@ public class main {
     public static void main (String[] argv)
     {
 
-
+/*
         try {
             Socket socket = new Socket("192.168.1.10", 4040);
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -58,7 +58,7 @@ public class main {
         {
             e.printStackTrace();
         }
-
+*/
 
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
@@ -77,19 +77,35 @@ public class main {
         });
 
         post("/client/addrow", (request, response) -> {
-            JSONParser json_parser = new JSONParser();
-            JSONObject jsonObject = (JSONObject) json_parser.parse(request.body());
-            String domain_name = (String) jsonObject.get("domain_name");
-            String country = (String) jsonObject.get("country");
-            JSONArray IPs_object= (JSONArray) jsonObject.get("IPs");
-            List<String> IPs = new ArrayList<String>();
 
-            for (int i=0; i<IPs_object.size(); i++) {
-                IPs.add((String) IPs_object.get(i));
+            // Parser for request.body() to convert it t json.
+            JSONParser json_parser = new JSONParser();
+
+            // Get array of json objects.
+            JSONArray jsonArray = (JSONArray)json_parser.parse(request.body());
+
+            // Walk through all objects in array.
+            for (int i = 0; i < jsonArray.size(); i++)
+            {
+                JSONObject jsonObject = (JSONObject) jsonArray.get(i);
+
+                String domain_name = (String) jsonObject.get("domain");
+                String country = (String) jsonObject.get("country");
+                JSONArray IPs_object= (JSONArray) jsonObject.get("IPs");
+                List<String> IPs = new ArrayList<String>();
+
+                for (int j = 0; j<IPs_object.size(); j++)
+                {
+
+                    IPs.add((String) IPs_object.get(j));
+
+                }
+
+
+                db_manager.addRow(domain_name, country, IPs);
+                System.out.println("user");
             }
 
-            db_manager.addRow(domain_name, country, IPs);
-            System.out.println("user");
             response.body("abosamra");
             return response.body();
 

@@ -1,0 +1,79 @@
+<html>
+<head>
+<script
+	src="http://code.jquery.com/jquery-3.3.1.min.js"
+	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	crossorigin="anonymous">
+</script>
+</head>
+<body>
+<div class="add_row_container">
+
+<div class = "new_row">
+<label> domain_name</label>
+<input type= "input"  name = "domain">
+<label>country</label>
+<input type= "input" name = "country">
+<label>IPs</label>
+<input type= "input" name = "IPs">
+</div>
+
+<div class = "new_row">
+<label> domain_name </label>
+<input type= "input"  name = "domain">
+<label>country</label>
+<input type= "input" name = "country">
+<label>IPs</label>
+<input type= "input" name = "IPs">
+</div>
+
+</div>
+
+
+<button class ="add_row"> add_rows </button>
+<button class ="add_another_input"> add_another_input </button>
+
+<!-- Adding row. -->
+<script>
+
+// Append new input fields.
+$(".add_another_input").click(function(){
+
+	$(".add_row_container").append("<div class = \"new_row\">"+
+	"<label> domain_name </label>"+
+	"<input type= \"input\"  name = \"domain\">"+
+	"<label>country </label>"+
+	"<input type= \"input\" name = \"country\">"+
+	"<label>IPs </label>"+
+	"<input type= \"input\" name = \"IPs\">"+
+	"</div>");
+
+})
+
+// When click addrows
+$(".add_row").click(function(){
+
+	var rows_object = []
+	var i, $add_row_container = $(".add_row_container").children()
+	for( i = 0;  i < $add_row_container.length; i++)
+	{
+
+		var domain = $add_row_container.eq(i).children("input[name=domain]").val();
+		var country = $add_row_container.eq(i).children("input[name=country]").val();
+		var IPs = $add_row_container.eq(i).children("input[name=IPs]").val()
+																.replace(/\s/g, '').split(',');	
+			rows_object.push({
+				"domain" : domain,
+				"country" : country,
+				"IPs" : IPs
+			})
+		// domain_name = $add_row_container.eq(i).children().first().children(".country").val();
+		// domain_name = $add_row_container.eq(i).children().first().children(".country").val();
+	}
+	console.log(JSON.stringify(rows_object));
+
+})
+</script>
+
+</body>
+</html>
