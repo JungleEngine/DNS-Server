@@ -19,12 +19,8 @@ public class DBManager {
 
     public DBManager()
     {
-
         collection = database.getCollection("dns");
-
     }
-
-
 
     public void set(String domain_name, String country_name, String IP)
     {
@@ -46,14 +42,14 @@ public class DBManager {
     public void deleteCells(String domain_name, String country_name)
     {
 
-        Bson filter =   Filters.and(
+        Bson filter = Filters.and(
 
                 Filters.eq("countries.country", country_name),
                 Filters.eq("domain_name", domain_name)
 
                                      );
 
-        Bson delete = Updates.pull("countries",   new Document("country", country_name));
+        Bson delete = Updates.pull("countries", new Document("country", country_name));
 
         // Delete that IP.
         collection.updateOne(filter, delete);
@@ -67,7 +63,7 @@ public class DBManager {
     public void deleteCells(String domain_name, String country_name, String IP)
     {
 
-        Bson filter =   Filters.and(
+        Bson filter = Filters.and(
 
                 Filters.eq("countries.country",   country_name),
                 Filters.eq("domain_name", domain_name),
@@ -109,17 +105,14 @@ public class DBManager {
 
     }
 
-    // Return all countries and IPs of certain domain
-    public List<Document> readRows(String domain_name)
-    {
+    // Return all IPs of a certain domain & country
+    public List<Document> readRows(String domain_name) {
 
         Document result = collection.find(Filters.eq("domain_name", domain_name)).first();
 
-        List<Document> docs = new ArrayList<>();
-        docs = result.get("countries", List.class);
+        List<Document> docs = result.get("countries", List.class);
 
         return docs;
-
     }
 
     public static void setInitialParameters(MongoClient _mongo, MongoCredential _credential, MongoDatabase _database) {

@@ -55,11 +55,11 @@ static {
     //FindIterable<Document> list = collection.find();
 }
     public void run() {
-        System.out.println("here");
+
         int count =(int)collection.count();
-        System.out.println("hello");
+
         //Bson filter = Filters.gt("domain_name","")
-        FindIterable<Document> list = collection.find().limit(5);
+        FindIterable<Document> list = collection.find().limit(100);
 
         String serialize = JSON.serialize(list);
 
@@ -68,14 +68,10 @@ static {
         {
         //    out.write(doc.toJson());
         }
-        System.out.println(serialize);
-        out.println(serialize);
-        System.out.println("5alast ba3t");
-        //try {
-        //    String str = in.readLine(); // The server reads a message from the client
-       // }catch(Exception e){
 
-        //}
+        System.out.println("Data: " + serialize);
+        out.println(serialize);
+        System.out.println("Data sent");
     }
 
     private static void sendMessage(String msg,ObjectOutputStream out)
