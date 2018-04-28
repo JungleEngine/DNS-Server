@@ -10,8 +10,10 @@ import com.mongodb.client.model.Updates;
 import org.bson.Document;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -27,6 +29,9 @@ public class Main {
     public static void main(String[] argv) {
 
         connectDB();
+
+
+        //TODO: return IP of the server regarding the request
         get("/connect/:domain", (request, response) -> {
 
 
@@ -130,7 +135,7 @@ public class Main {
                 for (Map.Entry<String, ArrayList<String>> Countries : Domains.getValue().entrySet()) {
                     countries.add(new Document("country", Countries.getKey()).append("IP", Countries.getValue()));
                 }
-                document.append("countries", countries);
+                document.append("countries", countries).append("dirty_bit","0");
                 collection.insertOne(document);
             }
 
