@@ -51,7 +51,7 @@ public class main {
             response.header("Access-Control-Allow-Methods", "GET");
         });
 
- 
+
 
         // Connect with the master server.
         try{
