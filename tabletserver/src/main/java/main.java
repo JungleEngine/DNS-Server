@@ -74,7 +74,6 @@ public class main {
             return "Hello";
         });
         post("/master/setrange", (request, response) -> {
-
             System.out.println("Set range");
 
             JSONParser JP = new JSONParser();
