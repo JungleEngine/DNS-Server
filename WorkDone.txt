@@ -1,0 +1,15 @@
+Communication Mechanism:
+http requests between client,master,tablet-servers
+we tried sockets between master and tablet-servers first but found to to be inefficient as communiction between them isn't that frequent
+
+
+Locking Mechanism:
+Mongo locks every row so that no two clients would write on the same row at the same time
+We additionally lock the tablet server when writing or deleting from the database with a variable
+
+
+data is allocated on the server with two things in mind
+1- to server locality of reference as websites are stored inverted like com.google
+2- allow for increasing in the range of data as .com is the most common as it takes more than 50% of the data
+the data is sorted alphabetically after inverting them which allows for some distribution of .com over the two tablets to serve the need for increasing the range and adding new rows
+but com is high in the alphabetical order so there isn't much data above it which allow to perserve the locality of reference intact as most of the .com data is stored together 

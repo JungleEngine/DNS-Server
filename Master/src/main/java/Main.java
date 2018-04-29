@@ -73,18 +73,23 @@ public class Main {
         public String end="";
     }
     public static void main(String[] argv) {
+
         logger = getLogger();
+
         connectDB();
+        //FillDatabase();
+        System.out.println("filled");
 
         port(1234);
 
         after((Filter) (request, response) -> {
             response.header("Access-Control-Allow-Origin", "*");
             response.header("Access-Control-Allow-Methods", "GET,POST");
+
         });
 
         before((Filter) (request, response) -> {
-            response.header("Access-Control-Allow-Origin", "*");
+            response.header("Access-Control-Allow-Origin", null);
             response.header("Access-Control-Allow-Methods", "GET,POST");
         });
 
@@ -139,8 +144,10 @@ public class Main {
 
             System.out.println(request.body());
             JSONParser JP = new JSONParser();
+            System.out.println(request.body());
             JSONObject JO = (JSONObject) JP.parse(request.body());
             String domain = (String) JO.get("domain_name");
+
             System.out.println(domain);
             logger.info("Client requesting access to tablet server containing: "+domain);
 
@@ -153,7 +160,9 @@ public class Main {
                     logger.info("Returning tablet server with range matching requested domain name");
                     //send ip of this tablet server
                     response.status(200);
-                    response.body(ip+":"+SparkPort);
+                    System.out.println("{\""+ip+"\""+":\""+SparkPort+"\"}");
+                    System.out.println("in range");
+                    response.body("{\"tablet_IP\":\""+ip+":"+SparkPort+"\"}");
                     return response.body();
                 }
             }
@@ -173,10 +182,12 @@ public class Main {
                     System.out.println(sendPost("http://"+ip+":"+SparkPort+"/master/setrange",data));
                     //send ip of this tablet server
                     response.status(200);
-                    response.body(ip+":"+SparkPort);
+                    System.out.println("{\""+ip+"\""+":\""+SparkPort+"\"}");
+                    response.body("{\"tablet_IP\":\""+ip+":"+SparkPort+"\"}");
                     return response.body();
                 }
             }
+            System.out.println("what is this");
              response.body("what is what is?");
             System.out.println("what is what is?");
             response.status(333);
@@ -351,7 +362,7 @@ public class Main {
                 Document document = new Document("domain_name", Domains.getKey());
                 ArrayList<Document> countries = new ArrayList<>();
                 for (Map.Entry<String, ArrayList<String>> Countries : Domains.getValue().entrySet()) {
-                    countries.add(new Document("country", Countries.getKey()).append("IP", Countries.getValue()));
+                    countries.add(new Document("country", Countries.getKey()).append("IPs", Countries.getValue()));
                 }
                 document.append("countries", countries).append("dirty_bit","0");
                 collection.insertOne(document);

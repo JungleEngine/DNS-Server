@@ -22,6 +22,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+import java.util.concurrent.atomic.AtomicInteger;
+
 
 import static java.lang.Thread.sleep;
 import static spark.Spark.*;
@@ -37,10 +39,14 @@ public class main {
     static String MasterURL = "http://localhost:1234";
     static String master_IP="localhost";
     static Logger logger;
+    static Boolean locked = false;
     public static void main(String[] argv) {
 
         port(5678);
         logger=getLogger();
+
+
+
         connectDB();
 
         DBManager.setInitialParameters(mongo, credential, database);
@@ -51,7 +57,7 @@ public class main {
             response.header("Access-Control-Allow-Methods", "GET,POST");
         });
         before((Filter) (request, response) -> {
-            response.header("Access-Control-Allow-Origin", "*");
+            response.header("Access-Control-Allow-Origin", null);
             response.header("Access-Control-Allow-Methods", "GET,POST");
         });
         //request initial data from master
@@ -103,6 +109,15 @@ public class main {
         // Add entire row with n columns and m columns data.
         post("/client/addrow", (request, response) -> {
 
+            if(locked.equals(true))
+            {
+                System.out.println("tablet locked");
+                JSONObject obj = new JSONObject();
+                obj.put("locked","true");
+                response.body(obj.toJSONString());
+                return response.body();
+            }
+
             System.out.println("Add row");
 
             // Parser for request.body() to convert it to JSON.
@@ -137,13 +152,20 @@ public class main {
                 for (int j = 0; j < IPs_object.size(); j++) {
                     IPs.add((String) IPs_object.get(j));
                 }
+
                 logger.info("Added new row in tablet server: "+domain_name);
+
+                locked = true;
+
                 db_manager.addRow(domain_name, country, IPs);
+                locked = false;
             }
 
             deleted_domains.remove(domain_name);
 
-            response.body("Added row successfully");
+            JSONObject obj = new JSONObject();
+            obj.put("row_added",1);
+            response.body(obj.toJSONString());
             return response.body();
         });
 
@@ -151,12 +173,22 @@ public class main {
         // Read domain info
         post("/client/readrow", (request, response) -> {
 
-            System.out.println("Read row");
+
+            if(locked.equals(true))
+            {
+                System.out.println("tablet locked");
+                JSONObject obj = new JSONObject();
+                obj.put("locked","true");
+                response.body(obj.toJSONString());
+                return response.body();
+            }
+
 
             JSONParser JP = new JSONParser();
             JSONObject JO = (JSONObject) JP.parse(request.body());
 
             String domain_name = (String) JO.get("domain_name");
+            System.out.println("Read row with domain " + domain_name);
 
 
             if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0 )
@@ -171,9 +203,12 @@ public class main {
                 //response.body("Redirected to master");
                 return response.body();
             }
-
+            locked = true;
             List<Document> docs = db_manager.readRow(domain_name);
+
             logger.info("Read row from tablet server: "+domain_name);
+            locked = false;
+
             String JSON = com.mongodb.util.JSON.serialize(docs);
 
             response.body(JSON);
@@ -184,6 +219,15 @@ public class main {
 
         // Delete domain from DB
         post("/client/deleterow", (request, response) -> {
+
+            if(locked.equals(true))
+            {
+                System.out.println("tablet locked");
+                JSONObject obj = new JSONObject();
+                obj.put("locked","true");
+                response.body(obj.toJSONString());
+                return response.body();
+            }
 
             System.out.println("Delete row");
 
@@ -203,9 +247,9 @@ public class main {
                 response.body(obj.toJSONString());
                 return response.body();
             }
-
+            locked = true;
             db_manager.deleteRow(domain_name);
-
+            locked = false;
             deleted_domains.add(domain_name);
 
             JSONObject obj = new JSONObject();
@@ -219,6 +263,16 @@ public class main {
         // Delete cells of certain domain and country.
         post("/client/deletecells", (request, response) -> {
 
+
+            if(locked.equals(true))
+            {
+                System.out.println("tablet locked");
+                JSONObject obj = new JSONObject();
+                obj.put("locked","true");
+                response.body(obj.toJSONString());
+                return response.body();
+            }
+
             System.out.println("Delete Cells");
 
             // Parser for request.body() to convert it to JSON.
@@ -230,9 +284,11 @@ public class main {
 
             if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
             {
+
 //                response.status(400);
 //                response.body("Redirected to master");
                 logger.info("Requested domain is out of range for this tablet server. Sending client back to master");
+
                 JSONObject obj = new JSONObject();
                 obj.put("master_IP",master_IP);
                 response.body(obj.toJSONString());
@@ -240,10 +296,16 @@ public class main {
             }
 
             String country = (String) JO.get("country");
-
+            locked = true;
             db_manager.deleteCells(domain_name, country);
+
             logger.info("Deleted: "+country+" in: "+domain_name);
-            response.body("Deleted successfully!");
+
+            locked = false;
+            JSONObject obj = new JSONObject();
+            obj.put(" delete cells ","true");
+            response.body(obj.toJSONString());
+
             return response.body();
 
         });
@@ -251,6 +313,16 @@ public class main {
 
         // Add row with n columns and n IPs
         post("/client/set","text/html", (request, response) -> {
+
+
+            if(locked.equals(true))
+            {
+                System.out.println("tablet locked");
+                JSONObject obj = new JSONObject();
+                obj.put("locked","true");
+                response.body(obj.toJSONString());
+                return response.body();
+            }
 
             System.out.println("Set");
 
@@ -286,10 +358,18 @@ public class main {
                 for (int j = 0; j < IPs_object.size(); j++) {
                     IPs.add((String) IPs_object.get(j));
                 }
+                locked = true;
                 db_manager.set(domain_name, country, IPs);
+                locked = false;
             }
+
             logger.info("Set operation is successful.");
-            response.body("Updated successfully!");
+
+
+            JSONObject obj = new JSONObject();
+            obj.put(" column  set ","true");
+            response.body(obj.toJSONString());
+
             return response.body();
         });
 
