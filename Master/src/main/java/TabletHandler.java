@@ -11,6 +11,7 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
+import org.json.simple.JSONObject;
 
 import javax.print.Doc;
 import java.io.*;
@@ -21,6 +22,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import static com.sun.org.apache.xalan.internal.xsltc.compiler.util.Type.Int;
 import static java.lang.Thread.sleep;
@@ -66,7 +68,7 @@ static {
         //TODO: send half of the words
         //TODO: send the other tablets other elements
         Bson filter = Filters.gt("domain_name", LastElement);
-        FindIterable<Document> list = collection.find(filter).limit(count/2);
+        FindIterable<Document> list = collection.find(filter).limit(2);
 
 
         String first=null;
@@ -79,24 +81,33 @@ static {
             LastElement = last = (String)doc.get("domain_name");
         }
         System.out.println(first+" "+last);
-        out.println(JSON.serialize(list));
-        String parameters="{first_domain:"+'"'+first+'"'+
-                "last_domain:"+'"'+last+"\"}";
 
 
-        String url="http://localhost:"+SparkPort+"/3bhady";
-//        String url="http://"+new String(socket.getInetAddress().getHostAddress())+":"+SparkPort+"/master/setrange";
-        try {
-            sleep(5);
-        }catch(Exception e){
-
-        }
+        JSONObject data = new JSONObject();
+        data.put("first_domain", first);
+        data.put("last_domain", last);
+        String url="http://0.0.0.0:"+SparkPort+"/master/setrange";
         System.out.println(url);
-        SendPost(url,parameters);
+        SendPost(url,data.toString());
+//        try {
+//            sleep(5000);
+//        } catch (InterruptedException e) {
+//            e.printStackTrace();
+//        }
         System.out.println("Data sent");
+        out.println(JSON.serialize(list));
+       // String url="http://localhost:"+SparkPort+"/3bhady";
+        //String url="http://0.0.0.0:"+SparkPort+"/master/setrange";
+
 
         //TODO: send range for the tablet server on it's endpoint
-
+//        Executors.newCachedThreadPool().execute(() -> {
+//            try {
+//                in.readLine();
+//            }catch(Exception e){
+//
+//            }
+//        });
 
 
         //TODO: wait for updates
@@ -116,43 +127,88 @@ static {
     }
 
     private static void SendPost(String url,String param) {
+//        try {
+//            //String url = "http://localhost:5678/3bhady";
+//
+//            URL obj = new URL(url);
+//            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+//
+//            // optional default is GET
+//            con.setRequestMethod("POST");
+//
+//            //add request header
+//            con.setRequestProperty("User-Agent", "Mozilla/5.0");
+//
+//            int responseCode = con.getResponseCode();
+//            System.out.println("\nSending 'GET' request to URL : " + url);
+//            System.out.println("Response Code : " + responseCode);
+//
+//            BufferedReader in = new BufferedReader(
+//                    new InputStreamReader(con.getInputStream()));
+//            String inputLine;
+//            StringBuffer response = new StringBuffer();
+//
+//            while ((inputLine = in.readLine()) != null) {
+//                response.append(inputLine);
+//            }
+//            in.close();
+//
+//            //print result
+//            System.out.println(response.toString());
+//        }catch (Exception e){
+//            e.printStackTrace();
+//        }
         try {
             URL obj = new URL(url);
             HttpURLConnection con = (HttpURLConnection) obj.openConnection();
-            con.setRequestMethod("GET");
-            con.setRequestProperty("content-type", "text/html;charset=utf-8");
+            con.setRequestMethod("POST");
+            con.setRequestProperty("Content-Type", "text/html");
+            //con.setRequestProperty("Accept", "text/html");
+            //con.addRequestProperty("Content-Type", "text/html");
+
 
             con.setDoOutput(true);
-           // OutputStream os = con.getOutputStream();
-           // os.write(param.getBytes());
-           // os.flush();
-           // os.close();
-            //DataOutputStream wr = new DataOutputStream(con.getOutputStream());
-            //wr.writeBytes(param);
-            //wr.flush();
-            //wr.close();
-            int responseCode = con.getResponseCode();
-            System.out.println("POST Response Code :: " + responseCode);
-
-//            if (responseCode == HttpURLConnection.HTTP_OK) { //success
-//                BufferedReader in = new BufferedReader(new InputStreamReader(
-//                        con.getInputStream()));
-//                String inputLine;
-//                StringBuffer response = new StringBuffer();
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(param);
+            wr.flush();
+            wr.close();
+            try {
+                BufferedReader br;
+                if (200 <= con.getResponseCode() && con.getResponseCode() <= 299) {
+                    br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                } else {
+                    br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+                }
+                br = new BufferedReader(new InputStreamReader((con.getInputStream())));
+                StringBuilder sb = new StringBuilder();
+                String output;
+                while ((output = br.readLine()) != null) {
+                    sb.append(output);
+                }
+                System.out.println(sb.toString());
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+            // OutputStream os = con.getOutputStream();
+            // os.write(param.getBytes());
+            // os.flush();
+            // os.close();
+//            BufferedReader in = new BufferedReader(
+//                    new InputStreamReader(con.getInputStream()));
+//            String inputLine;
+//            StringBuilder response = new StringBuilder();
 //
-//                while ((inputLine = in.readLine()) != null) {
-//                    response.append(inputLine);
-//                }
-//                in.close();
-//
-//                // print result
-//                System.out.println(response.toString());
-//            } else {
-//                System.out.println("POST request not worked");
+//            while ((inputLine = in.readLine()) != null) {
+//                response.append(inputLine);
 //            }
+//            in.close();
+//            // print result
+//            System.out.println(response.toString());
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
 
     }
     private static void connectDB() {

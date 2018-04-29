@@ -148,6 +148,8 @@ public class DBManager {
     public void fillInitialData(String initialData) {
 
         try {
+
+
             JSONParser JP = new JSONParser();
             JSONArray JA = (JSONArray) JP.parse(initialData);
 
