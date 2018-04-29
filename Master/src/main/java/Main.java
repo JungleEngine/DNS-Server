@@ -12,6 +12,7 @@ import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import spark.Filter;
 
 import java.io.*;
@@ -96,9 +97,12 @@ public class Main {
 
 
         //collection.updateOne(Filters.eq("domain_name",))
-        get("connect", (request, response) -> {
-            System.out.println(request.queryParams("domain"));
-            String domain=request.queryParams("domain");
+        post("connect", (request, response) -> {
+            JSONParser JP = new JSONParser();
+            JSONObject JO = (JSONObject) JP.parse(request.body());
+            String domain = (String) JO.get("domain_name");
+            System.out.println(domain);
+
             for(Map.Entry<String,Range> entry : tablets.entrySet()) {
                 String ip = entry.getKey();
                 Range range = entry.getValue();
@@ -107,7 +111,7 @@ public class Main {
                 {
                     //send ip of this tablet server
                     response.status(200);
-                    response.body(ip);
+                    response.body(ip+":"+SparkPort);
                     return response.body();
                 }
             }
