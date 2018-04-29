@@ -312,7 +312,11 @@ public class main {
         });
 
     }
-
+    private static boolean inRange(String s){
+        if(first_domain.equals(""))
+            return (s.compareToIgnoreCase(last_domain)<=0);
+        return (s.compareToIgnoreCase(first_domain)*s.compareToIgnoreCase(last_domain))<=0;
+    }
     private static String sendGet(String url){
         try {
             URL obj = new URL(url);
