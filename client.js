@@ -47,7 +47,7 @@ function request(data, endpoint)
 
                 var obj = JSON.parse(response);
                 console.log(" back fromtablet with ip.. :" + ip_to_send);
-                if (obj.tablet_locked != null)
+                if (obj.locked != null)
                 {
                     console.log(" tablet locked try again later..");
                 }
