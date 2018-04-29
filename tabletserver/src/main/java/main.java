@@ -20,9 +20,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
-import static spark.Spark.after;
-import static spark.Spark.port;
-import static spark.Spark.post;
+import static spark.Spark.*;
 
 public class main {
     static MongoClient mongo;
@@ -41,10 +39,11 @@ public class main {
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
         DBManager db_manager = new DBManager();
-
         after((Filter) (request, response) -> {
             response.header("Access-Control-Allow-Origin", "*");
-            response.header("Access-Control-Allow-Methods", "GET");
+            response.header("Access-Control-Allow-Methods", "GET,POST");
+            response.type("text/html");
+            response.header("Content-Type","text/html");
         });
 
  
@@ -52,7 +51,7 @@ public class main {
         // Connect with the master server.
         try{
             // Open a socket with master server
-            Socket s = new Socket("localhost",4040);
+            Socket s = new Socket("192.168.1.25",4040);
 
             PrintWriter out = new PrintWriter(s.getOutputStream(), true);
             BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -71,6 +70,12 @@ public class main {
           e.printStackTrace();
         }
 
+        get("/3bhady",(request, response) -> {
+            System.out.println("heeereee");
+            response.body("hello");
+            return "Hello";
+        });
+
         post("/master/setrange", (request, response) -> {
 
             System.out.println("Set range");
@@ -82,7 +87,7 @@ public class main {
             String last_domain = (String)JO.get("last_domain");
 
             response.body("Received range!");
-            return response.body();
+            return "Hello";
         });
 
         // Add entire row with n columns and m columns data.

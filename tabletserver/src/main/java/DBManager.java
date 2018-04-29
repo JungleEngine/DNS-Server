@@ -154,11 +154,16 @@ public class DBManager {
             for (int i = 0 ; i < JA.size(); ++i)
             {
                 JSONObject JO = (JSONObject)JA.get(i);
-                collection.insertOne(Document.parse(JO.toString()));
+                try {
+                    collection.insertOne(Document.parse(JO.toString()));
+                }catch(Exception e)
+                {
+
+                }
             }
 
-            if (initialData != null)
-                System.out.println("Message: " + initialData);
+            //if (initialData != null)
+            //    System.out.println("Message: " + initialData);
 
             System.out.println("Received data from master");
 
