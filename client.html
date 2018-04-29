@@ -9,10 +9,15 @@ div{
 <script
 	src="http://code.jquery.com/jquery-3.3.1.min.js"
 	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
-	crossorigin="anonymous">
+	crossorigin="anonymous">/////////////////  -->
+
+
 </script>
 <script>
 var BASE_URL = "http://localhost:4567/";
+var BASE_URL = "http://";
+
+var master = "";
 // Post requests.
 function sendRequest(data, endpoint){
 	$.post(BASE_URL+endpoint,JSON.stringify(data),function(response){
