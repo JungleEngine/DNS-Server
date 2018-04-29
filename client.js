@@ -10,25 +10,40 @@ var BASE_URL = "ttp://localhost:4567/";
 
 var ip_to_send = MASTER_IP;
 
+var master_end_point = "/connect";
+
 var results_html = $(".results");
 
 
-function request(data,endpoint)
+
+function request(data, endpoint)
 {
+    var special_domain;
+    var old_data = data;
+    // check if add row .
+    if (endpoint === "/client/addrow")
+        old_data = data[Object.keys(data)[0]];
 
-    console.log(ip_to_send+endpoint);
+    var new_endpoint=endpoint;
+    if(ip_to_send === MASTER_IP)
+        new_endpoint = master_end_point;
+
+    console.log("master : ","http://"+ip_to_send+ new_endpoint);
     // sendRequest(rows_object, "/client/set");
-    $.post("http://"+ip_to_send+":"+port+endpoint ,JSON.stringify(data),function(response){
+    old_data = JSON.stringify(old_data);
+    data = JSON.stringify(data);
+    $.post("http://"+ip_to_send+ new_endpoint , old_data,function(response){
 
+        console.log(response);
         var obj = JSON.parse(response);
-
+        console.log(" master response: ",JSON.stringify(obj));
         if(obj.tablet_IP != null)
         {
             ip_to_send = obj.tablet_IP;
 
-            console.log("switch to tablet with ip : "+ ip_to_send);
+            console.log("switch to tablet with ip : "+ ip_to_send+endpoint);
 
-            $.post("http://"+ip_to_send+endpoint ,JSON.stringify(data),function(response) {
+            $.post("http://"+ip_to_send+new_endpoint ,data,function(response) {
 
                 var obj = JSON.parse(response);
                 console.log(" back fromtablet with ip.. :" + ip_to_send);
@@ -48,7 +63,7 @@ function request(data,endpoint)
             results_html.append("switch to master with ip : "+ ip_to_send+"<br>");
 
             // send again to master to get data and forward it to user.
-            $.post("http://" + ip_to_send +endpoint, JSON.stringify(data), function (response) {
+            $.post("http://" + ip_to_send +master_end_point, JSON.stringify(old_data), function (response) {
                 var obj = JSON.parse(response);
                 ip_to_send = obj.tablet_IP;
 
@@ -79,8 +94,6 @@ function request(data,endpoint)
             $(".results").empty();
             $(".results").append("successed operation : \n "+JSON.stringify(obj));
         }
-        console.log(JSON.stringify(data));
-        console.log("set_row");
 
     });
 }
@@ -110,9 +123,9 @@ $(".set .set_another_input").click(function(){
 
 $(".set_row").click(function() {
 
-    var rows_object = []
+    var rows_object = [];
     var domain = $(".set input[name=domain]").val();
-    var i, $add_row_container = $(".set_row_container").children()
+    var i, $add_row_container = $(".set_row_container").children();
     for (i = 0; i < $add_row_container.length; i++) {
 
         var country = $add_row_container.eq(i).children("input[name=country]").val();
@@ -182,10 +195,10 @@ $(".set_row").click(function() {
 // Read row.
 $(".read_row").click(function(){
 
-    var domain = $(".read-row").children("input[name=domain]").val()
+    var domain = $(".read-row").children("input[name=domain]").val();
     var object = {
         domain_name : domain,
-    }
+    };
 
     request(object, "/client/readrow");
 
@@ -197,10 +210,10 @@ $(".read_row").click(function(){
 // Delete row.
 $(".delete_row").click(function(){
 
-    var domain = $(".delete-row").children("input[name=domain]").val()
+    var domain = $(".delete-row").children("input[name=domain]").val();
     var object = {
         domain_name : domain,
-    }
+    };
     request(object, "/client/deleterow");
     console.log(JSON.stringify(object));
 
@@ -210,12 +223,12 @@ $(".delete_row").click(function(){
 // Delete cells.
 $(".delete_cells").click(function(){
 
-    var domain = $(".delete-cells").children("input[name=domain]").val()
-    var country = $(".delete-cells").children("input[name=country]").val()
+    var domain = $(".delete-cells").children("input[name=domain]").val();
+    var country = $(".delete-cells").children("input[name=country]").val();
     var object = {
         domain_name : domain,
         country : country
-    }
+    };
     request(object, "/client/deletecells");
 
     console.log(JSON.stringify(object));
@@ -238,9 +251,9 @@ $(".add_another_input").click(function(){
 // When click addrows
 $(".add_row").click(function(){
 
-    var rows_object = []
+    var rows_object = [];
     var domain = $(".add input[name=domain]").val();
-    var i, $add_row_container = $(".add_row_container").children()
+    var i, $add_row_container = $(".add_row_container").children();
     for( i = 0;  i < $add_row_container.length; i++)
     {
 
@@ -251,14 +264,13 @@ $(".add_row").click(function(){
             "domain_name" : domain,
             "country" : country,
             "IPs" : IPs
-        })
+        });
         // domain_name = $add_row_container.eq(i).children().first().children(".country").val();
         // domain_name = $add_row_container.eq(i).children().first().children(".country").val();
     }
 
     request(rows_object, "/client/addrow");
 
-    console.log(JSON.stringify(rows_object));
 
 });
 
