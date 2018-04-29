@@ -1,231 +1,103 @@
 <html>
-
 <head>
     <style>
-    div {
-
-        margin: 1%;
-    }
+        div{
+            margin:1%;
+        }
     </style>
-    <script src="http://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous">
-    </script>
-    <script>
-    var BASE_URL = "http://localhost:4567/";
-    // Post requests.
-    function sendRequest(data, endpoint) {
-        $.post(BASE_URL + endpoint, JSON.stringify(data), function(response) {
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
 
-            console.log("Response, ", response);
-
-        });
-    }
-    </script>
 </head>
-
 <body>
-    <div class="add">
-        <label>Add row</label>
-        <br>
-        <label> domain_name </label>
-        <input type="input" name="domain">
-        <div class="add_row_container">
-            <div class="new_row">
-                <label> country </label>
-                <input type="input" name="country">
-                <label>IPs</label>
-                <input type="input" name="IPs">
-            </div>
+
+<h2>RESULTS-CONSOLE</h2>
+<div class="results" style = "border:1px solid darkslategrey">
+</div>
+
+<div class = "add">
+    <label>Add row</label><br>
+
+    <label> domain_name </label>
+    <input type= "input"  name = "domain">
+    <div class="add_row_container">
+
+        <div class = "new_row">
+            <label> country </label>
+            <input type= "input" name = "country">
+            <label>IPs</label>
+            <input type= "input" name = "IPs">
         </div>
-        <button class="add_row"> add_rows </button>
-        <button class="add_another_input"> add_another_input </button>
+
+
     </div>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <br>
-    <!-- ///////////////////////////////////////-->
-    <div class="delete-row">
-        <label> Delete row</label>
-        <br>
-        <label> Domain</label>
-        <input type="input" name="domain">
-        <button class="delete_row"> delete_row </button>
-    </div>
-    <br>
-    <br>
-    <br>
-    <br>
-    <!-- /////////////////////////////////////////////  -->
-    <!-- ///////////////////////////////////////-->
-    <div class="delete-cells">
-        <label> Delete cells</label>
-        <br>
-        <label> Domain</label>
-        <input type="input" name="domain">
-        <label> Country </label>
-        <input type="input" name="country">
-        <button class="delete_cells"> delete_cells </button>
-    </div>
-    <!-- /////////////////////////////////////////////  -->
-    <!-- ///////////////////////////////////////-->
-    <div class="read-row">
-        <label> Read row</label>
-        <br>
-        <label> Domain</label>
-        <input type="input" name="domain">
-        <button class="read_row"> read_row </button>
-    </div>
-    <br>
-    <br>
-    <br>
-    <br>
-    <!-- /////////////////////////////////////////////  -->
-    <!-- ///////////////////////////////////////-->
-    <div class="set">
-        <label>Set row</label>
-        <br>
-        <label> domain_name </label>
-        <input type="input" name="domain">
-        <div class="set_row_container">
-            <div class="new_row">
-                <label> country </label>
-                <input type="input" name="country">
-                <label>IPs</label>
-                <input type="input" name="IPs">
-            </div>
+
+
+    <button class ="add_row"> add_rows </button>
+    <button class ="add_another_input"> add_another_input </button>
+</div>
+<br>
+<br><br><br><br><br>
+
+<!-- ///////////////////////////////////////-->
+<div class = "delete-row">
+    <label> Delete row</label><br>
+    <label> Domain</label>
+
+    <input type= "input" name = "domain">
+
+    <button class ="delete_row"> delete_row </button>
+</div><br><br><br><br>
+<!-- /////////////////////////////////////////////  -->
+
+<!-- ///////////////////////////////////////-->
+<div class = "delete-cells">
+    <label> Delete cells</label><br>
+    <label> Domain</label>
+
+    <input type= "input" name = "domain">
+    <label> Country </label>
+    <input type= "input" name = "country">
+    <button class ="delete_cells"> delete_cells </button>
+</div>
+<!-- /////////////////////////////////////////////  -->
+
+
+<!-- ///////////////////////////////////////-->
+<div class = "read-row">
+    <label> Read row</label><br>
+    <label> Domain</label>
+
+    <input type= "input" name = "domain">
+
+    <button class ="read_row"> read_row </button>
+</div><br><br><br><br>
+<!-- /////////////////////////////////////////////  -->
+
+
+<!-- ///////////////////////////////////////-->
+<div class = "set">
+    <label>Set row</label><br>
+
+    <label> domain_name </label>
+    <input type= "input"  name = "domain">
+    <div class="set_row_container">
+
+        <div class = "new_row">
+            <label> country </label>
+            <input type= "input" name = "country">
+            <label>IPs</label>
+            <input type= "input" name = "IPs">
         </div>
-        <button class="set_row"> set_row </button>
-        <button class="set_another_input"> set_another_input </button>
+
+
     </div>
-    <br>
-    <br>
-    <br>
-    <!-- /////////////////////////////////////////////  -->
-    <!-- Adding row. -->
-    <script>
-    // Set row with n-columns.
-    $(".set .set_another_input").click(function() {
-
-        $(".set .set_row_container").append("<div class = \"new_row\">" +
-            "<label>country </label>" +
-            "<input type= \"input\" name = \"country\">" +
-            "<label>IPs </label>" +
-            "<input type= \"input\" name = \"IPs\">" +
-            "</div>");
-
-    })
-
-    $(".set_row").click(function() {
-
-        var rows_object = []
-        var domain = $(".set input[name=domain]").val();
-        var i, $add_row_container = $(".set_row_container").children()
-        for (i = 0; i < $add_row_container.length; i++) {
-
-            var country = $add_row_container.eq(i).children("input[name=country]").val();
-            var IPs = $add_row_container.eq(i).children("input[name=IPs]").val()
-                .replace(/\s/g, '').split(',');
-            rows_object.push({
-                "domain": domain,
-                "country": country,
-                "IPs": IPs
-            })
-            // domain_name = $add_row_container.eq(i).children().first().children(".country").val();
-            // domain_name = $add_row_container.eq(i).children().first().children(".country").val();
-        }
-
-        sendRequest(rows_object, "/client/set");
-
-        console.log(JSON.stringify(rows_object));
-        console.log("set_row");
-
-    })
-
-    /////
-    // Read row.
-    $(".read_row").click(function() {
-
-        var domain = $(".read-row").children("input[name=domain]").val()
-        var object = {
-            domain: domain,
-        }
-
-        sendRequest(object, "/client/readrow");
-
-        console.log(JSON.stringify(object));
-
-    })
 
 
-    // Delete row.
-    $(".delete_row").click(function() {
+    <button class ="set_row"> set_row </button>
+    <button class ="set_another_input"> set_another_input </button>
+</div><br><br><br>
+<!-- /////////////////////////////////////////////  -->
 
-        var domain = $(".delete-row").children("input[name=domain]").val()
-        var object = {
-            domain: domain,
-        }
-        sendRequest(object, "/client/deleterow");
-        console.log(JSON.stringify(object));
-
-    })
-
-
-    // Delete cells.
-    $(".delete_cells").click(function() {
-
-        var domain = $(".delete-cells").children("input[name=domain]").val()
-        var country = $(".delete-cells").children("input[name=country]").val()
-        var object = {
-            domain: domain,
-            country: country
-        }
-        sendRequest(object, "/client/deletecells");
-
-        console.log(JSON.stringify(object));
-
-    })
-    /////////////////////////////////
-    ////////////////////////////////
-    // Append new input fields.
-    $(".add_another_input").click(function() {
-
-        $(".add_row_container").append("<div class = \"new_row\">" +
-            "<label>country </label>" +
-            "<input type= \"input\" name = \"country\">" +
-            "<label>IPs </label>" +
-            "<input type= \"input\" name = \"IPs\">" +
-            "</div>");
-
-    })
-
-    // When click addrows
-    $(".add_row").click(function() {
-
-        var rows_object = []
-        var domain = $(".add input[name=domain]").val();
-        var i, $add_row_container = $(".add_row_container").children()
-        for (i = 0; i < $add_row_container.length; i++) {
-
-            var country = $add_row_container.eq(i).children("input[name=country]").val();
-            var IPs = $add_row_container.eq(i).children("input[name=IPs]").val()
-                .replace(/\s/g, '').split(',');
-            rows_object.push({
-                "domain": domain,
-                "country": country,
-                "IPs": IPs
-            })
-            // domain_name = $add_row_container.eq(i).children().first().children(".country").val();
-            // domain_name = $add_row_container.eq(i).children().first().children(".country").val();
-        }
-
-        sendRequest(rows_object, "/client/addrow");
-
-        console.log(JSON.stringify(rows_object));
-
-    })
-    </script>
+<script src ="client.js"></script>
 </body>
-
 </html>

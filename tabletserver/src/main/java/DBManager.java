@@ -148,6 +148,8 @@ public class DBManager {
     public void fillInitialData(String initialData) {
 
         try {
+
+
             JSONParser JP = new JSONParser();
             JSONArray JA = (JSONArray) JP.parse(initialData);
 
@@ -175,9 +177,8 @@ public class DBManager {
     public String getUpdatedDocuments() {
 
         FindIterable<Document> docs = collection.find(Filters.eq("dirty_bit", "1"));
-
+        collection.updateMany(Filters.eq("dirty_bit","1"),new Document().append("dirty_bit","0"));
         String serialize = JSON.serialize(docs);
-
         return serialize;
     }
 }
