@@ -49,7 +49,7 @@ public class Main {
             //bigger than start and smaller than the end
             System.out.println("s:"+s);
             System.out.println("start:"+start);
-            System.out.println("end"+end);
+            System.out.println("end:"+end);
             System.out.println("s.compareToIgnoreCase(start):"+s.compareToIgnoreCase(start));
             System.out.println("s.compareToIgnoreCase(end)"+s.compareToIgnoreCase(end));
                 if(start.equals(""))

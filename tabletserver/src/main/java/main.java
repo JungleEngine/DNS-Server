@@ -26,6 +26,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static java.lang.Thread.sleep;
 import static spark.Spark.*;
 
 public class main {
@@ -72,7 +73,6 @@ public class main {
         }else {
             System.out.println("got an empty response from master");
         }
-
 
         get("/3bhady",(request, response) -> {
 
@@ -347,8 +347,19 @@ public class main {
             return response.body();
         });
 
-    }
+        /*try{
+            sleep(20000);
+            //TODO:send updates
+        }catch (Exception e){
 
+        }*/
+
+    }
+    private static boolean inRange(String s){
+        if(first_domain.equals(""))
+            return (s.compareToIgnoreCase(last_domain)<=0);
+        return (s.compareToIgnoreCase(first_domain)*s.compareToIgnoreCase(last_domain))<=0;
+    }
     private static String sendGet(String url){
         try {
             URL obj = new URL(url);
