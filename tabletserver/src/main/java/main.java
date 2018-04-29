@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
+import static java.lang.Thread.sleep;
 import static spark.Spark.*;
 
 public class main {
@@ -70,30 +71,6 @@ public class main {
         }else {
             System.out.println("got an empty response from master");
         }
-
-
-
-
-//
-//            PrintWriter out = new PrintWriter(s.getOutputStream(), true);
-//            BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
-//
-//            // Read data from Master
-//            String initialData = in.readLine();
-
-//
-//            db_manager.fillInitialData(initialData);
-//
-//            TimeUnit.SECONDS.sleep(30);
-//
-//            out.println(deleted_domains);
-//            out.println(db_manager.getUpdatedDocuments());
-//
-//        }catch(Exception e){
-//          e.printStackTrace();
-//        }
-//
-//
 
         get("/3bhady",(request, response) -> {
 
@@ -310,6 +287,13 @@ public class main {
             response.body("Updated successfully!");
             return response.body();
         });
+
+        /*try{
+            sleep(20000);
+            //TODO:send updates
+        }catch (Exception e){
+
+        }*/
 
     }
     private static boolean inRange(String s){
