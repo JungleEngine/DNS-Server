@@ -1,8 +1,8 @@
 var take_from_master = false;
 
-const MASTER_IP = "localhost";
+const MASTER_IP = "localhost:1234";
 
-var tablet_ip = "localhost";
+var tablet_ip = "localhost:4567";
 
 var port = "4567";
 
@@ -16,7 +16,7 @@ var results_html = $(".results");
 function request(data,endpoint)
 {
 
-    console.log(ip_to_send+":"+port+endpoint);
+    console.log(ip_to_send+endpoint);
     // sendRequest(rows_object, "/client/set");
     $.post("http://"+ip_to_send+":"+port+endpoint ,JSON.stringify(data),function(response){
 
@@ -28,7 +28,7 @@ function request(data,endpoint)
 
             console.log("switch to tablet with ip : "+ ip_to_send);
 
-            $.post("http://"+ip_to_send+":"+port+endpoint ,JSON.stringify(data),function(response) {
+            $.post("http://"+ip_to_send+endpoint ,JSON.stringify(data),function(response) {
 
                 var obj = JSON.parse(response);
                 console.log(" back fromtablet with ip.. :" + ip_to_send);
@@ -48,14 +48,14 @@ function request(data,endpoint)
             results_html.append("switch to master with ip : "+ ip_to_send+"<br>");
 
             // send again to master to get data and forward it to user.
-            $.post("http://" + ip_to_send + ":" + port+endpoint, JSON.stringify(data), function (response) {
+            $.post("http://" + ip_to_send +endpoint, JSON.stringify(data), function (response) {
                 var obj = JSON.parse(response);
                 ip_to_send = obj.tablet_IP;
 
                 console.log(" switching to tablet with ip.. :" + ip_to_send+"\n");
                 results_html.append("switch to tablet with ip : "+ ip_to_send+"<br>");
 
-                $.post("http://" + ip_to_send + ":" + port+endpoint, JSON.stringify(data), function (response) {
+                $.post("http://" + ip_to_send + endpoint, JSON.stringify(data), function (response) {
 
                     var obj = JSON.parse(response);
                     console.log(" back fromtablet with ip.. :" + ip_to_send+"\n");
