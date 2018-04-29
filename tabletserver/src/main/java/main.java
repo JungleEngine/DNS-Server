@@ -35,10 +35,12 @@ public class main {
     static Set<String> deleted_domains = new HashSet<>();
     static String first_domain = "";
     static String last_domain = "";
+
     static String MasterURL = "http://localhost:1234";
+    static String master_IP="localhost";
     public static void main(String[] argv) {
 
-        port(5678);
+        //port(5678);
 
         connectDB();
         DBManager.setInitialParameters(mongo, credential, database);
@@ -72,10 +74,6 @@ public class main {
 
 
 
-        // Connect with the master server.
-//        try {
-//            // Open a socket with master server
-//            Socket s = new Socket("localhost", 4040);
 //
 //            PrintWriter out = new PrintWriter(s.getOutputStream(), true);
 //            BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
@@ -83,16 +81,22 @@ public class main {
 //            // Read data from Master
 //            String initialData = in.readLine();
 
-
-            //TimeUnit.SECONDS.sleep(30);
-
-            //out.println(deleted_domains);
-            //out.println(db_manager.getUpdatedDocuments());
 //
-//        } catch (Exception e) {
-//            e.printStackTrace();
+//            db_manager.fillInitialData(initialData);
+//
+//            TimeUnit.SECONDS.sleep(30);
+//
+//            out.println(deleted_domains);
+//            out.println(db_manager.getUpdatedDocuments());
+//
+//        }catch(Exception e){
+//          e.printStackTrace();
 //        }
-        get("3bhady", (Request request,Response response) -> {
+//
+//
+
+        get("/3bhady",(request, response) -> {
+
             System.out.println("heeereee");
             response.status(200);
             response.body("ok");
@@ -136,9 +140,14 @@ public class main {
 
                 domain_name = (String) JO.get("domain_name");
 
-                if (domain_name.compareTo(first_domain) < 0 || domain_name.compareTo(last_domain) > 0) {
-                    response.status(400);
-                    response.body("Redirected to master");
+
+                if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+                {
+//                    response.status(400);
+//                    response.body("Redirected to master");
+                    JSONObject obj = new JSONObject();
+                    obj.put("master_IP",master_IP);
+                    response.body(obj.toJSONString());
                     return response.body();
                 }
 
@@ -171,9 +180,17 @@ public class main {
 
             String domain_name = (String) JO.get("domain_name");
 
-            if (domain_name.compareTo(first_domain) < 0 || domain_name.compareTo(last_domain) > 0) {
-                response.status(400);
-                response.body("Redirected to master");
+
+            if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0 )
+            {
+                System.out.println("out of range");
+                //response.status(400);
+
+                JSONObject obj = new JSONObject();
+                obj.put("master_IP",master_IP);
+                response.body(obj.toJSONString());
+
+                //response.body("Redirected to master");
                 return response.body();
             }
 
@@ -197,9 +214,14 @@ public class main {
 
             String domain_name = (String) JO.get("domain_name");
 
-            if (domain_name.compareTo(first_domain) < 0 || domain_name.compareTo(last_domain) > 0) {
-                response.status(400);
-                response.body("Redirected to master");
+
+            if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+            {
+                //response.status(400);
+                //response.body("Redirected to master");
+                JSONObject obj = new JSONObject();
+                obj.put("master_IP",master_IP);
+                response.body(obj.toJSONString());
                 return response.body();
             }
 
@@ -207,7 +229,9 @@ public class main {
 
             deleted_domains.add(domain_name);
 
-            response.body("Deleted successfully!");
+            JSONObject obj = new JSONObject();
+            obj.put(" deleted row ",1);
+            response.body(obj.toJSONString());
             return response.body();
         });
 
@@ -223,9 +247,14 @@ public class main {
 
             String domain_name = (String) JO.get("domain_name");
 
-            if (domain_name.compareTo(first_domain) < 0 || domain_name.compareTo(last_domain) > 0) {
-                response.status(400);
-                response.body("Redirected to master");
+
+            if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+            {
+//                response.status(400);
+//                response.body("Redirected to master");
+                JSONObject obj = new JSONObject();
+                obj.put("master_IP",master_IP);
+                response.body(obj.toJSONString());
                 return response.body();
             }
 
@@ -256,9 +285,14 @@ public class main {
 
                 String domain_name = (String) JO.get("domain_name");
 
-                if (domain_name.compareTo(first_domain) < 0 || domain_name.compareTo(last_domain) > 0) {
-                    response.status(400);
-                    response.body("Redirected to master");
+
+                if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
+                {
+//                    response.status(400);
+//                    response.body("Redirected to master");
+                    JSONObject obj = new JSONObject();
+                    obj.put("master_IP",master_IP);
+                    response.body(obj.toJSONString());
                     return response.body();
                 }
 
