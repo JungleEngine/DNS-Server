@@ -25,3 +25,8 @@ hs_err_pid*
 #intellij folders
 .idea
 out/
+*.log
+*.log.lck
+*.lck
+Master/Master.log.lck
+Master/Master.log

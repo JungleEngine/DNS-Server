@@ -4,6 +4,7 @@ import com.mongodb.MongoCredential;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -12,18 +13,15 @@ import spark.Filter;
 import spark.Request;
 import spark.Response;
 
-import java.io.BufferedReader;
-import java.io.DataOutputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.Socket;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import static java.lang.Thread.sleep;
 import static spark.Spark.*;
@@ -36,14 +34,15 @@ public class main {
     static Set<String> deleted_domains = new HashSet<>();
     static String first_domain = "";
     static String last_domain = "";
-
     static String MasterURL = "http://localhost:1234";
     static String master_IP="localhost";
+    static Logger logger;
     public static void main(String[] argv) {
 
-        //port(5678);
-
+        port(5678);
+        logger=getLogger();
         connectDB();
+
         DBManager.setInitialParameters(mongo, credential, database);
         DBManager db_manager = new DBManager();
 
@@ -59,6 +58,7 @@ public class main {
         String initialData = sendGet(MasterURL+"/tablet/data");
         if(initialData!=null&&!initialData.equals("")) {
             System.out.println("successfully received data from master");
+            logger.info("Successfully received initial from master");
             try {
                 JSONParser JP = new JSONParser();
                 JSONObject JO = (JSONObject) JP.parse(initialData);
@@ -83,12 +83,14 @@ public class main {
         post("master/setrange", (Request request, Response response) -> {
 
             System.out.println("Set range");
+
             try {
                 JSONParser JP = new JSONParser();
                 JSONObject JO = (JSONObject) JP.parse(request.body());
 
                 first_domain = (String) JO.get("first_domain");
                 last_domain = (String) JO.get("last_domain");
+                logger.info("Adjusted range of tablet first: "+first_domain+" last: "+last_domain);
                 response.body("Received range done!");
                 response.status(200);
             }catch (Exception e){
@@ -120,8 +122,7 @@ public class main {
 
                 if(domain_name.compareTo( first_domain) < 0 || domain_name.compareTo( last_domain) > 0)
                 {
-//                    response.status(400);
-//                    response.body("Redirected to master");
+                    logger.info("Requested domain is out of range for this tablet server. Sending client back to master");
                     JSONObject obj = new JSONObject();
                     obj.put("master_IP",master_IP);
                     response.body(obj.toJSONString());
@@ -136,7 +137,7 @@ public class main {
                 for (int j = 0; j < IPs_object.size(); j++) {
                     IPs.add((String) IPs_object.get(j));
                 }
-
+                logger.info("Added new row in tablet server: "+domain_name);
                 db_manager.addRow(domain_name, country, IPs);
             }
 
@@ -162,7 +163,7 @@ public class main {
             {
                 System.out.println("out of range");
                 //response.status(400);
-
+                logger.info("Requested domain is out of range for this tablet server. Sending client back to master");
                 JSONObject obj = new JSONObject();
                 obj.put("master_IP",master_IP);
                 response.body(obj.toJSONString());
@@ -172,7 +173,7 @@ public class main {
             }
 
             List<Document> docs = db_manager.readRow(domain_name);
-
+            logger.info("Read row from tablet server: "+domain_name);
             String JSON = com.mongodb.util.JSON.serialize(docs);
 
             response.body(JSON);
@@ -196,6 +197,7 @@ public class main {
             {
                 //response.status(400);
                 //response.body("Redirected to master");
+                logger.info("Requested domain is out of range for this tablet server. Sending client back to master");
                 JSONObject obj = new JSONObject();
                 obj.put("master_IP",master_IP);
                 response.body(obj.toJSONString());
@@ -208,6 +210,7 @@ public class main {
 
             JSONObject obj = new JSONObject();
             obj.put(" deleted row ",1);
+            logger.info("Deleted Row: "+domain_name);
             response.body(obj.toJSONString());
             return response.body();
         });
@@ -229,6 +232,7 @@ public class main {
             {
 //                response.status(400);
 //                response.body("Redirected to master");
+                logger.info("Requested domain is out of range for this tablet server. Sending client back to master");
                 JSONObject obj = new JSONObject();
                 obj.put("master_IP",master_IP);
                 response.body(obj.toJSONString());
@@ -238,7 +242,7 @@ public class main {
             String country = (String) JO.get("country");
 
             db_manager.deleteCells(domain_name, country);
-
+            logger.info("Deleted: "+country+" in: "+domain_name);
             response.body("Deleted successfully!");
             return response.body();
 
@@ -267,6 +271,7 @@ public class main {
                 {
 //                    response.status(400);
 //                    response.body("Redirected to master");
+                    logger.info("Requested domain is out of range for this tablet server. Sending client back to master");
                     JSONObject obj = new JSONObject();
                     obj.put("master_IP",master_IP);
                     response.body(obj.toJSONString());
@@ -283,19 +288,42 @@ public class main {
                 }
                 db_manager.set(domain_name, country, IPs);
             }
-
+            logger.info("Set operation is successful.");
             response.body("Updated successfully!");
             return response.body();
         });
 
-        /*try{
-            sleep(20000);
-            //TODO:send updates
-        }catch (Exception e){
+        while(true) {
+            try {
+                sleep(20000);
+                //TODO:send updates
+                System.out.println("sending updates!");
 
-        }*/
+                String docs = db_manager.getUpdatedDocuments();
+                String deleted = JSON.serialize(Arrays.asList(deleted_domains.toArray()));
 
+                if (docs == null || docs.equals(""))
+                {
+                    if(deleted==null||deleted.equals(""))
+                    {
+                        logger.info("Skipping sending updates as nothing has changed");
+                        continue;
+                    }
+                }
+                logger.info("Sending updates to Master");
+                JSONObject data = new JSONObject();
+                data.put("deleted", deleted);
+                data.put("edited", docs);
+                if (sendPost(MasterURL + "/update/tablets", data.toString()) != null) {
+                    deleted_domains.clear();
+
+                }
+            } catch (Exception e) {
+
+            }
+        }
     }
+
     private static boolean inRange(String s){
         if(first_domain.equals(""))
             return (s.compareToIgnoreCase(last_domain)<=0);
@@ -330,6 +358,39 @@ public class main {
             return null;
         }
     }
+    private static String sendPost(String url,String data){
+        try {
+            URL obj = new URL(url);
+            HttpURLConnection con = (HttpURLConnection) obj.openConnection();
+            con.setRequestMethod("POST");
+            con.setDoOutput(true);
+            DataOutputStream wr = new DataOutputStream(con.getOutputStream());
+            wr.writeBytes(data);
+            wr.flush();
+            wr.close();
+            try {
+                BufferedReader br;
+                if (200 <= con.getResponseCode() && con.getResponseCode() <= 299) {
+                    br = new BufferedReader(new InputStreamReader(con.getInputStream()));
+                } else {
+                    br = new BufferedReader(new InputStreamReader(con.getErrorStream()));
+                }
+                br = new BufferedReader(new InputStreamReader((con.getInputStream())));
+                StringBuilder sb = new StringBuilder();
+                String output;
+                while ((output = br.readLine()) != null) {
+                    sb.append(output);
+                }
+                return sb.toString();
+            } catch (Exception e) {
+                System.out.println(e);
+                return null;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
     private static void connectDB() {
         try {
 
@@ -341,12 +402,37 @@ public class main {
             credential = MongoCredential.createCredential("", "tabletserver", "".toCharArray());
             database = mongo.getDatabase("tabletserver");
             collection = database.getCollection("dns");
-
+            logger.info("Successfully connected to database");
         } catch (Exception e) {
 
             System.out.println("error connecting to database " + e.getMessage());
 
         }
+    }
+    private static Logger getLogger(){
+
+        Logger logger = Logger.getLogger("MyLog");
+        FileHandler fh;
+
+        try {
+
+            // This block configure the logger with handler and formatter
+            fh = new FileHandler("TabletServer.log");
+            logger.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+
+            // the following statement is used to log any messages
+            logger.info("My first log");
+
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return logger;
     }
 
 }

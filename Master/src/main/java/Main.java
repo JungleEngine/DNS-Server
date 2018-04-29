@@ -11,6 +11,7 @@ import com.mongodb.client.model.Updates;
 import com.mongodb.util.JSON;
 import org.bson.Document;
 import org.bson.conversions.Bson;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import spark.Filter;
@@ -23,6 +24,9 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import static spark.Spark.*;
 
@@ -34,13 +38,13 @@ public class Main {
     static String LastElement="";
     static String SparkPort="5678"; //port for sending to tablet servers their ranges
     static Map<String,Range>tablets= new TreeMap<>();
+    static Logger logger;
     static public class Range{
         Range(String s,String e){
             start=s;
             end=e;
         }
-        boolean inRange(String s)
-        {
+        boolean inRange(String s) {
             /*
                 System.out.println(s1.compareTo(s2));//0
                 System.out.println(s1.compareTo(s3));//1(because s1>s3)
@@ -69,6 +73,7 @@ public class Main {
         public String end="";
     }
     public static void main(String[] argv) {
+        logger = getLogger();
         connectDB();
 
         port(1234);
@@ -95,13 +100,49 @@ public class Main {
 //
 //        });
 
+        post("update/tablets",((request, response) -> {
+            logger.info("Updating Master Table data from tablet server "+request.ip());
+            JSONParser JP = new JSONParser();
+            JSONObject JO = (JSONObject) JP.parse(request.body());
+            String deleted = (String) JO.get("deleted");
+            String edited = (String) JO.get("edited");
 
+            JSONArray deletedJSON = (JSONArray) JP.parse(deleted);
+            JSONArray editedJSON = (JSONArray) JP.parse(edited);
+
+            for (int i = 0 ; i < editedJSON.size(); ++i)
+            {
+                JSONObject temp = (JSONObject)editedJSON.get(i);
+                try {
+                    //TODO:is this over writing or not???
+                    collection.insertOne(Document.parse(temp.toString()));
+                }catch(Exception e)
+                {
+
+                }
+            }
+            for (int i = 0 ; i < deletedJSON.size(); ++i)
+            {
+                JSONObject temp = (JSONObject)deletedJSON.get(i);
+                try {
+                    collection.deleteOne(new Document("domain_name",temp.toString()));
+                }catch(Exception e)
+                {
+
+                }
+            }
+
+            return "ok";
+        }));
         //collection.updateOne(Filters.eq("domain_name",))
         post("connect", (request, response) -> {
+
+            System.out.println(request.body());
             JSONParser JP = new JSONParser();
             JSONObject JO = (JSONObject) JP.parse(request.body());
             String domain = (String) JO.get("domain_name");
             System.out.println(domain);
+            logger.info("Client requesting access to tablet server containing: "+domain);
 
             for(Map.Entry<String,Range> entry : tablets.entrySet()) {
                 String ip = entry.getKey();
@@ -109,6 +150,7 @@ public class Main {
 
                 if(range.inRange(domain))
                 {
+                    logger.info("Returning tablet server with range matching requested domain name");
                     //send ip of this tablet server
                     response.status(200);
                     response.body(ip+":"+SparkPort);
@@ -121,6 +163,8 @@ public class Main {
 
                 if(range.isBefore(domain))
                 {
+                    logger.info("Increasing the range of: "+ip+" with new range: "+domain);
+                    entry.setValue(new Range(domain,range.end));
                     //adjust range of this tablet server
                     //if this doesn't make the client adjust the range of the tablet server
                     JSONObject data = new JSONObject();
@@ -134,6 +178,7 @@ public class Main {
                 }
             }
              response.body("what is what is?");
+            System.out.println("what is what is?");
             response.status(333);
             return response.body();
         });
@@ -142,7 +187,7 @@ public class Main {
         get("/tablet/data", (request, response) -> {
 
             int count =(int)collection.count();
-
+            logger.info("Tablet server requesting initial data");
             //Bson filter = Filters.gt("domain_name","")
             //send half of data
             //TODO: send half of the words
@@ -187,6 +232,31 @@ public class Main {
             return response.body();
         });
 
+    }
+    private static Logger getLogger(){
+
+        Logger logger = Logger.getLogger("MyLog");
+        FileHandler fh;
+
+        try {
+
+            // This block configure the logger with handler and formatter
+            fh = new FileHandler("Master.log");
+            logger.addHandler(fh);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fh.setFormatter(formatter);
+
+            // the following statement is used to log any messages
+            logger.info("My first log");
+
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        return logger;
     }
     private static String sendPost(String url,JSONObject data){
         try {
@@ -310,6 +380,7 @@ public class Main {
             credential = MongoCredential.createCredential("", "mp2", "".toCharArray());
             database = mongo.getDatabase("mp2");
             collection = database.getCollection("dns");
+            logger.info("Connected to database");
         } catch (Exception e) {
 
             System.out.println("error connecting to database " + e.getMessage());

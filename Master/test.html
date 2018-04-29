@@ -1,0 +1,15 @@
+<script
+	src="http://code.jquery.com/jquery-3.3.1.min.js"
+	integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8="
+	crossorigin="anonymous">/////////////////  -->
+
+
+</script>
+
+<script>
+$.post( "http://localhost:1234/connect", { domain_name: "com.google" }, function( resp ) {
+            console.log( "data" ); // John
+        }, function(err){
+	console.log(err);
+});
+</script>
